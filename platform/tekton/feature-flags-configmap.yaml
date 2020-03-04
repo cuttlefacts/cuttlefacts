@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  disable-home-env-overwrite: "false"
+  disable-working-directory-overwrite: "false"
+kind: ConfigMap
+metadata:
+  name: feature-flags
+  namespace: platform

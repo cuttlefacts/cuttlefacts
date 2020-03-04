@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: tekton-pipelines
+    pipeline.tekton.dev/release: v0.11.0-rc1
+    version: v0.11.0-rc1
+  name: tekton-pipelines-controller
+  namespace: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tekton-pipelines-controller
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+      labels:
+        app: tekton-pipelines-controller
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/name: tekton-pipelines
+        pipeline.tekton.dev/release: v0.11.0-rc1
+        version: v0.11.0-rc1
+    spec:
+      containers:
+      - args:
+        - -kubeconfig-writer-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/kubeconfigwriter:v0.11.0-rc1@sha256:66ff7dd82f77a9e7a5f5fbc6783baf5af732bb4428e0c7293ce7c285bd06f90e
+        - -creds-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/creds-init:v0.11.0-rc1@sha256:d1251c017ad8db911f6b459f9cbe94328c962b619b5a6e4ef57524254c1dc30d
+        - -git-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.11.0-rc1@sha256:90bab5bf608890d086942890681d84faf82c1cc766c97ad95e309c50bdac3121
+        - -nop-image
+        - tianon/true
+        - -shell-image
+        - busybox
+        - -gsutil-image
+        - google/cloud-sdk
+        - -entrypoint-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/entrypoint:v0.11.0-rc1@sha256:4c6b3559819aa9e32b8b6b506140115a93e66fd513036c1d20f3426f5e405be1
+        - -imagedigest-exporter-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/imagedigestexporter:v0.11.0-rc1@sha256:8b339a57f2080c6d017636317e368cca3c9124f0fe14af98e53d1dc446bb897e
+        - -pr-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/pullrequest-init:v0.11.0-rc1@sha256:62388b0dd5fd3b12444e454cdb6ec967afb557dd2131a9f94bb7bb98761b5f35
+        - -build-gcs-fetcher-image
+        - gcr.io/tekton-releases/github.com/tektoncd/pipeline/vendor/github.com/googlecloudplatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher:v0.11.0-rc1@sha256:74fd88bb0c4810483bdbbfb779d9ad01324145d5e3e63c4c9271c61ae0d4e1c7
+        env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability
+        - name: CONFIG_ARTIFACT_BUCKET_NAME
+          value: config-artifact-bucket
+        - name: CONFIG_ARTIFACT_PVC_NAME
+          value: config-artifact-pvc
+        - name: METRICS_DOMAIN
+          value: tekton.dev/pipeline
+        image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller:v0.11.0-rc1@sha256:786a306a2645186ad2c547db2cfc3e1987cd31962166dc320c908d10ebe903b9
+        name: tekton-pipelines-controller
+        volumeMounts:
+        - mountPath: /etc/config-logging
+          name: config-logging
+      serviceAccountName: tekton-pipelines-controller
+      volumes:
+      - configMap:
+          name: config-logging
+        name: config-logging

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: tekton-pipelines-webhook
+    pipeline.tekton.dev/release: v0.11.0-rc1
+    role: webhook
+    version: v0.11.0-rc1
+  name: tekton-pipelines-webhook
+  namespace: platform
+spec:
+  ports:
+  - name: http-metrics
+    port: 9090
+    targetPort: 9090
+  - name: http-profiling
+    port: 8008
+    targetPort: 8008
+  - name: https-webhook
+    port: 443
+    targetPort: 8443
+  selector:
+    app: tekton-pipelines-webhook
+    role: webhook
