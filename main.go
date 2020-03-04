@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
+	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
@@ -16,8 +19,18 @@ func main() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
+	factfile, err := ioutil.ReadFile("facts.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var facts []string
+	if err = json.Unmarshal(factfile, &facts); err != nil {
+		log.Fatal(err)
+	}
+	fact := facts[rand.Intn(len(facts))]
+
 	tmpl := template.Must(template.ParseFiles("index.html.tmpl"))
-	if err := tmpl.Execute(w, "Cuttlefishes are molluscs"); err != nil {
+	if err := tmpl.Execute(w, fact); err != nil {
 		log.Fatal(err)
 	}
 	return
