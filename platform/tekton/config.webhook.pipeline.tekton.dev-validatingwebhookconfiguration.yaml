@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    pipeline.tekton.dev/release: devel
+  name: config.webhook.pipeline.tekton.dev
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: tekton-pipelines-webhook
+      namespace: platform
+  failurePolicy: Fail
+  name: config.webhook.pipeline.tekton.dev
+  namespaceSelector:
+    matchExpressions:
+    - key: pipeline.tekton.dev/release
+      operator: Exists
+  sideEffects: None

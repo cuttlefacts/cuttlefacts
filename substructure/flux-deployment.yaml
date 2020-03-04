@@ -136,6 +136,7 @@ spec:
         - --git-url=git@github.com:squaremo/cuttlefacts
         - --git-branch=master
         - --git-path=substructure
+        - --git-path=platform
         - --git-label=flux
         - --git-user=Flux
         - --git-email=michael+cuttlefacts@weave.works
