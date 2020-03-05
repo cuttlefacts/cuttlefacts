@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: tekton-triggers-controller
+    triggers.tekton.dev/release: v0.3.1
+    version: v0.3.1
+  name: tekton-triggers-controller
+  namespace: platform
+spec:
+  ports:
+  - name: http-metrics
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: tekton-triggers-controller
