@@ -23,5 +23,14 @@ The [Tekton triggers controller][tekton-triggers] and its entourage of YAMLs are
 processed with the same script (though using a parameter to adjust it
 slightly -- see the script itself).
 
+### Verifying Tekton
+
+You can see if Tekton is doing anything by making a "Hello World"
+pipeline, and checking if you can run it.
+
+There is a helloworld pipeline defined in [examples/helloworld][],
+which will do just that. It does not demonstrate the use of storage,
+though.
+
 [tekton-install]: https://github.com/tektoncd/pipeline/blob/master/docs/install.md#installing-tekton-pipelines-on-kubernetes
 [tekton-triggers]: https://github.com/tektoncd/triggers/blob/master/docs/getting-started/README.md

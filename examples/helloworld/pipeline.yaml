@@ -1,0 +1,41 @@
+# Adapted from https://gist.githubusercontent.com/ndeloof/fabaeb48f9c2acc97b4be7f935a800c5/raw/0642c6be5b57e4387a869dd86d14e07a6af6c2f6/pipeline.yaml
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: say-hello
+spec:
+  inputs:
+    params:
+    - name: who
+      description: who to say hello
+      default: kitty
+  steps:
+  - name: say
+    image: alpine
+    command:
+    - /bin/echo
+    args:
+    - "Hello ${inputs.params.who}"
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: demo-pipeline
+spec:
+  tasks:
+  - name: say-hello-world
+    taskRef:
+      name: say-hello
+    params:
+    - name: who
+      value: world
+# ---
+## Run it via the CLI
+# apiVersion: tekton.dev/v1alpha1
+# kind: PipelineRun
+# metadata:
+#   name: demo-pipeline-run-1
+# spec:
+#   pipelineRef:
+#     name: demo-pipeline
+#   serviceAccount: 'default'
