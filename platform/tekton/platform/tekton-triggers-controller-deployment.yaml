@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: tekton-triggers
+    triggers.tekton.dev/release: v0.3.1
+  name: tekton-triggers-controller
+  namespace: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tekton-triggers-controller
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+      labels:
+        app: tekton-triggers-controller
+        triggers.tekton.dev/release: v0.3.1
+        version: v0.3.1
+    spec:
+      containers:
+      - args:
+        - -logtostderr
+        - -stderrthreshold
+        - INFO
+        - -el-image
+        - gcr.io/tekton-releases/github.com/tektoncd/triggers/cmd/eventlistenersink@sha256:99a594c37c68cc3127ea3ebc03b03514727442fb6ed8818b49cc740bcb474f8e
+        - -el-port
+        - "8080"
+        - -period-seconds
+        - "10"
+        - -failure-threshold
+        - "1"
+        env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging-triggers
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability-triggers
+        - name: METRICS_DOMAIN
+          value: tekton.dev/triggers
+        image: gcr.io/tekton-releases/github.com/tektoncd/triggers/cmd/controller@sha256:dc6eafe048692e7f8d8f33453eafe9f55222f372d84c9a2128a14d52aa145e00
+        name: tekton-triggers-controller
+        volumeMounts:
+        - mountPath: /etc/config-logging
+          name: config-logging
+      serviceAccountName: tekton-triggers-controller
+      volumes:
+      - configMap:
+          name: config-logging-triggers
+        name: config-logging

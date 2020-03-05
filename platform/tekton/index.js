@@ -5,7 +5,11 @@
 //     curl curl -L https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml | \
 //       jk generate --lib jkcfg/kubernetes ./platform/tekton/ --stdout
 //
-// (and use `-o platform` to put it all in individual files).
+// (or use `-o platform` to put it all in individual files).
+//
+// The parameters are `newNamespace`, in case you don't want things in
+// platform/, and `controller`, which is different for e.g., the
+// Tekton triggers YAML (which otherwise is amenable to this script).
 
 
 import { valuesForGenerate } from '@jkcfg/kubernetes/generate';
@@ -14,6 +18,7 @@ import { merge, deepWithKey } from '@jkcfg/std/merge';
 import * as param from '@jkcfg/std/param';
 
 const newNamespace = param.String('namespace', 'platform');
+const controllerName = param.String('controller', 'tekton-pipelines-controller');
 
 // mergeMap assumes the left-hand value is an array, and merges each
 // item with the right-hand value (using the given rules) to get
@@ -32,7 +37,7 @@ function renamespace(v) {
   // namespaced themselves.
   if (v.kind === 'ClusterRoleBinding') {
     return merge(v, {
-      subjects: [{ name: 'tekton-pipelines-controller', namespace: newNamespace }]
+      subjects: [{ name: controllerName, namespace: newNamespace }]
     }, { subjects: deepWithKey('name') });
   }
 
