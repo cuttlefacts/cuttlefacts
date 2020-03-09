@@ -3,3 +3,6 @@ kind: ConfigMap
 metadata:
   name: config-artifact-pvc
   namespace: platform
+# data:
+#   size: "5Gi"
+#   storageClassName: non-default
