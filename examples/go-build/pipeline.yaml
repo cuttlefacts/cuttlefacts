@@ -1,0 +1,102 @@
+# This is adapted from the example given at
+# https://github.com/tektoncd/pipeline/blob/master/examples/v1beta1/pipelineruns/output-pipelinerun.yaml
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: cuttlefacts-repo
+spec:
+  type: git
+  params:
+  - name: revision
+    value: master
+  - name: url
+    value: https://github.com/squaremo/cuttlefacts.git
+
+---
+# Task go-build accepts a git repo and builds the main.go in it
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: go-build
+spec:
+  params:
+  - name: filename
+    description: the filename for the binary
+    default: a.out
+  resources:
+    inputs:
+    - name: repo
+      type: git
+    outputs:
+    - name: repo
+      type: git
+  steps:
+  - name: build-go
+    image: golang:1.13.8
+    command: ["go"]
+    args:
+    - build
+    - -o
+    - "$(outputs.resources.repo.path)/$(inputs.params.filename)"
+    - "$(inputs.resources.repo.path)/main.go"
+
+---
+# Reads a file from a predefined path in the workspace git PipelineResource
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: check-file-exists
+spec:
+  params:
+  - name: filename
+    description: the filename to check in the input repo
+    default: "a.out"
+  resources:
+    inputs:
+    - name: repo
+      type: git
+  steps:
+  - name: ls
+    image: alpine:3.9
+    command: ["ls"]
+    args:
+    - "$(inputs.resources.repo.path)/$(inputs.params.filename)"
+
+---
+# The output (a git resource) of the first task `go-build` is given as
+# an input to the next task, `check-file-exists`, using the `from`
+# field.
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-check
+spec:
+  resources:
+  - name: source
+    type: git
+  tasks:
+  - name: build
+    taskRef:
+      name: go-build
+    params:
+    - name: filename
+      value: facts
+    resources:
+      inputs:
+      - name: repo
+        resource: source
+      outputs:
+      - name: repo
+        resource: source
+  - name: then-check
+    taskRef:
+      name: check-file-exists
+    params:
+    - name: filename
+      value: facts
+    resources:
+      inputs:
+      - name: repo
+        resource: source
+        from: [build]
