@@ -1,0 +1,18 @@
+# This is a cluster role giving the permissions that an
+# application-syncing Flux needs _within_ a namespace. It's a cluster
+# role so that it can be referred to by a RoleBinding in each
+# application namespace (which narrows the permissions to that
+# namespace).
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    name: flux
+  name: flux-application
+rules:
+  - apiGroups: ['*']
+    resources: ['*']
+    verbs: ['*']
+  - nonResourceURLs: ['*']
+    verbs: ['*']

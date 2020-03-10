@@ -1,0 +1,113 @@
+# See the policy/README.md for how RBAC is arranged for running Flux
+# for an application
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    name: flux
+  name: flux-cuttlefacts
+  namespace: policy
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  labels:
+    name: flux
+    namespace: cuttlefacts
+  name: flux
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flux-application
+subjects:
+  - kind: ServiceAccount
+    name: flux-cuttlefacts
+    namespace: policy
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flux-cuttlefacts
+  namespace: policy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: flux-cuttlefacts
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "3031" # tell prometheus to scrape /metrics endpoint's port.
+      labels:
+        name: flux-cuttlefacts
+    spec:
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      serviceAccountName: flux-cuttlefacts
+
+      containers:
+      - name: flux
+        # There are no ":latest" images for flux. Find the most recent
+        # release or image version at https://hub.docker.com/r/fluxcd/flux/tags
+        # and replace the tag here.
+        image: docker.io/fluxcd/flux:1.18.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        ports:
+        - containerPort: 3030 # informational
+        livenessProbe:
+          httpGet:
+            port: 3030
+            path: /api/flux/v6/identity.pub
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            port: 3030
+            path: /api/flux/v6/identity.pub
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+
+        args:
+
+        # Restrict to just the application namespace
+        - --k8s-allow-namespace=cuttlefacts
+
+        # Replace the following URL to change the Git repository used by Flux.
+        # HTTP basic auth credentials can be supplied using environment variables:
+        # https://$(GIT_AUTHUSER):$(GIT_AUTHKEY)@github.com/user/repository.git
+        - --git-url=https://github.com/squaremo/cuttlefacts
+        - --git-branch=policy-layer # <--- CHANGE ME
+        # Include this if you want to restrict the manifests considered by flux
+        # to those under the following relative paths in the git repository
+        - --git-path=app/cuttlefacts
+
+        # Include these two to enable git commit signing
+        # - --git-gpg-key-import=/root/gpg-import
+        # - --git-signing-key=<key id>
+
+        # Include this to enable git signature verification
+        # - --git-verify-signatures
+
+        # Tell flux it has readonly access to the repo (default `false`)
+        - --git-readonly
+
+        # Serve /metrics endpoint at different port;
+        # make sure to set prometheus' annotation to scrape the port value.
+        - --listen-metrics=:3031
+        - --registry-disable-scanning
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flux-git-deploy
+  namespace: policy
+type: Opaque
