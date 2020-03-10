@@ -21,18 +21,19 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       serviceAccountName: flux
-      volumes:
-      - name: git-key
-        secret:
-          secretName: flux-git-deploy
-          defaultMode: 0400 # when mounted read-only, we won't be able to chmod
 
-      # This is a tmpfs used for generating SSH keys. In K8s >= 1.10,
-      # mounted secrets are read-only, so we need a separate volume we
-      # can write to.
-      - name: git-keygen
-        emptyDir:
-          medium: Memory
+      # volumes:
+      # - name: git-key
+      #   secret:
+      #     secretName: flux-git-deploy
+      #     defaultMode: 0400 # when mounted read-only, we won't be able to chmod
+
+      # # This is a tmpfs used for generating SSH keys. In K8s >= 1.10,
+      # # mounted secrets are read-only, so we need a separate volume we
+      # # can write to.
+      # - name: git-keygen
+      #   emptyDir:
+      #     medium: Memory
 
       # The following volume is for using a customised known_hosts
       # file, which you will need to do if you host your own git
@@ -86,12 +87,13 @@ spec:
             path: /api/flux/v6/identity.pub
           initialDelaySeconds: 5
           timeoutSeconds: 5
-        volumeMounts:
-        - name: git-key
-          mountPath: /etc/fluxd/ssh # to match location given in image's /etc/ssh/config
-          readOnly: true # this will be the case perforce in K8s >=1.10
-        - name: git-keygen
-          mountPath: /var/fluxd/keygen # to match location given in image's /etc/ssh/config
+
+        # volumeMounts:
+        # - name: git-key
+        #   mountPath: /etc/fluxd/ssh # to match location given in image's /etc/ssh/config
+        #   readOnly: true # this will be the case perforce in K8s >=1.10
+        # - name: git-keygen
+        #   mountPath: /var/fluxd/keygen # to match location given in image's /etc/ssh/config
 
         # Include this if you need to mount a customised known_hosts
         # file; you'll also need the volume declared above.
@@ -128,18 +130,15 @@ spec:
 
         # This must be supplied, and be in the tmpfs (emptyDir)
         # mounted above, for K8s >= 1.10
-        - --ssh-keygen-dir=/var/fluxd/keygen
+        #- --ssh-keygen-dir=/var/fluxd/keygen
 
         # Replace the following URL to change the Git repository used by Flux.
         # HTTP basic auth credentials can be supplied using environment variables:
         # https://$(GIT_AUTHUSER):$(GIT_AUTHKEY)@github.com/user/repository.git
-        - --git-url=git@github.com:squaremo/cuttlefacts
+        - --git-url=https://github.com/squaremo/cuttlefacts
         - --git-branch=master
         - --git-path=substructure
         - --git-path=platform
-        - --git-label=flux
-        - --git-user=Flux
-        - --git-email=michael+cuttlefacts@weave.works
 
         # Include these two to enable git commit signing
         # - --git-gpg-key-import=/root/gpg-import
