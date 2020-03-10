@@ -23,7 +23,7 @@ The [Tekton triggers controller][tekton-triggers] and its entourage of YAMLs are
 processed with the same script (though using a parameter to adjust it
 slightly -- see the script itself).
 
-### Verifying Tekton
+## Verifying Tekton
 
 You can see if Tekton is doing anything by making a "Hello World"
 pipeline, and checking if you can run it.
@@ -59,3 +59,11 @@ If you need to use another, non-default storage class, you can put its
 name in
 [platform/tekton/config-artifact-pvc-configmap.yaml](../../platform/tekton/config-artifact-pvc-configmap.yaml)
 and restart the pipeline controller.
+
+## Ingress
+
+I am using the [Nginx ingress controller][ingress-nginx], with the
+configuration in [`./ingress`][]. Consult the linked deployment
+document for variations specific to your environment.
+
+[ingress-nginx]: https://kubernetes.github.io/ingress-nginx/deploy/
