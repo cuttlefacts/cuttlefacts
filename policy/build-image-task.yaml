@@ -1,0 +1,52 @@
+---
+# This is a (cluster) task that builds an image given the src repo as
+# a resource, and a path as a param, and pushes it to the output image
+# resource. This is adapted from
+#     https://github.com/tektoncd/catalog/blob/master/kaniko/kaniko.yaml
+# in the following ways:
+#
+#  - made into a ClusterTask
+#  - updated to the v1beta1 structure
+#  - renamed to suit how I've named things in this repo
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: build-image
+spec:
+  params:
+  - name: DOCKERFILE
+    description: Path to the Dockerfile to build.
+    default: ./Dockerfile
+  - name: CONTEXT
+    description: The build context used by Kaniko.
+    default: ./
+  - name: EXTRA_ARGS
+    default: ""
+  - name: BUILDER_IMAGE
+    description: The image on which builds will run
+    default: gcr.io/kaniko-project/executor:v0.13.0
+  resources:
+    inputs:
+    - name: source
+      type: git
+    outputs:
+    - name: image
+      type: image
+
+  steps:
+  - name: build-and-push
+    workingDir: /workspace/source
+    image: $(inputs.params.BUILDER_IMAGE)
+    # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
+    # https://github.com/tektoncd/pipeline/pull/706
+    env:
+    - name: DOCKER_CONFIG
+      value: /tekton/home/.docker
+    command:
+    - /kaniko/executor
+    - $(inputs.params.EXTRA_ARGS)
+    - --dockerfile=$(inputs.params.DOCKERFILE)
+    - --context=/workspace/source/$(inputs.params.CONTEXT)  # The user does not need to care the workspace and the source.
+    - --destination=$(outputs.resources.image.url)
+    securityContext:
+      runAsUser: 0

@@ -9,6 +9,8 @@ metadata:
   name: flux-cuttlefacts
   namespace: policy
 ---
+# NB this must live in the cuttlefacts namespace, because it narrows
+# permissions to the namespace it is in
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
 metadata:

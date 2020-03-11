@@ -1,0 +1,46 @@
+## This contains Tekton Triggers definitions particular to the
+## `cuttlefacts` app. These do not live in the cuttlefacts namespace;
+## they just drive delivery for that things in that namespace.
+---
+# These bindings hardcode some of the fields that we (mostly) do not
+# want to take from the payload
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: cuttlefacts-push-binding
+  namespace: policy
+spec:
+  params:
+  - name: gitrepositoryurl
+    value: https://github.com/squaremo/cuttlefacts
+  - name: dockerfile
+    value: src/Dockerfile
+  - name: path
+    value: src/
+  - name: imagename
+    value: docker.pkg.github.com/squaremo/cuttlefacts/app:$(body.head_commit.id)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: cuttlefacts-merge-listener
+  namespace: policy
+spec:
+  serviceType: ClusterIP
+  serviceAccountName: policy-serviceaccount
+  triggers:
+    - name: master-merge
+      interceptors:
+      - github:
+          secretRef:
+            secretName: github-shared-secret
+            secretKey: key
+          eventTypes:
+          - push
+      - cel:
+          filter: "body.ref == 'refs/heads/build-pipe'"
+      bindings:
+      - name: github-push-binding
+      - name: cuttlefacts-push-binding
+      template:
+        name: build-image-template
