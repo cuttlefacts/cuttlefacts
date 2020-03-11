@@ -33,7 +33,7 @@ spec:
       interceptors:
       - github:
           secretRef:
-            secretName: github-shared-secret
+            secretName: cuttlefacts-github-secret
             secretKey: key
           eventTypes:
           - push
