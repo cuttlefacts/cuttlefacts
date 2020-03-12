@@ -20,9 +20,11 @@ kubectl -n policy create secret generic cuttlefacts-github-secret --from-literal
 
 ## Setting up a Docker image push secret
 
-To be able to push newly built images, the service account running the
-image build task needs an imagePullSecret with write permission to the
-Docker image repo.
+To be able to push newly built images, the service account associated
+with the image build **task run** needs an secret with write
+permission to the Docker image repo. The format of these secrets is
+[described in the Tekton
+docs](https://github.com/tektoncd/pipeline/blob/master/docs/auth.md#basic-authentication-docker).
 
 I'm using [GitHub's package
 storage](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-docker-for-use-with-github-packages)
@@ -35,12 +37,16 @@ clipboard:
 ```
 # the name 'cuttlefacts-push-secret' matches the imagePullSecret
 # in policy/triggers-serviceaccount.yaml
-kubectl create secret docker-registry \
+kubectl create secret generic --type=kubernetes.io/basic-auth \
   -n policy cuttlefacts-push-secret \
-  --docker-server=docker.pkg.github.com \
-  --docker-username=squaremo \
-  --docker-password=$(pbpaste)
+  --from-literal=username=squaremo \
+  --from-literal=password=$(pbpaste)
+kubectl annotate -n policy secret cuttlefacts-push-secret "tekton.dev/docker-0=https://docker.pkg.github.com"
 ```
+
+(the annotation tells Tekton which host the secret is used for)
+
+The service account already refers to this secret.
 
 ## ngrok
 
@@ -54,3 +60,6 @@ service (in policy/cuttlefacts/triggers.yaml). To see the ngrok
 dashboard, which will tell you the address:
 
     kubectl port-forward -n policy 4040 deploy/ngrok
+
+You can then get the webhook endpoint from http://localhost:4040/ and
+set it up in the GitHub settings page for the project.

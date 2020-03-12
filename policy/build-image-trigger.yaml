@@ -41,12 +41,15 @@ spec:
     description: The path to the Docker context
   - name: imagename
     description: The image being built
+  - name: serviceaccount
+    description: the service account to run under
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: TaskRun
     metadata:
       generateName: build-image-
     spec:
+      serviceAccountName: $(params.serviceaccount) # <-- must have the docker push secret
       taskRef:
         name: build-image
         kind: ClusterTask

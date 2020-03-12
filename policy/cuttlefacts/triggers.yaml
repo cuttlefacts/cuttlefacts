@@ -19,6 +19,8 @@ spec:
     value: src/
   - name: imagename
     value: docker.pkg.github.com/squaremo/cuttlefacts/app:$(body.head_commit.id)
+  - name: serviceaccount
+    value: cuttlefacts-serviceaccount
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
@@ -27,7 +29,7 @@ metadata:
   namespace: policy
 spec:
   serviceType: ClusterIP
-  serviceAccountName: policy-serviceaccount
+  serviceAccountName: cuttlefacts-serviceaccount # somewhat arbitrarily
   triggers:
     - name: master-merge
       interceptors:

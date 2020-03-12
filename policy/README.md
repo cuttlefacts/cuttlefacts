@@ -37,10 +37,13 @@ that authorisation can be set in the policy layer.
    given its own service account.
  - Each application Flux's service account has a RoleBinding to the
    generic `ClusterRole`, narrowing it to the _application_ namespace.
- - All Tekton triggers run with the same ServiceAccount which has
-   wide-ranging permissions in the cluster. It's probably possible to
-   narrow the permissions down to the particular namespace of the app,
-   and otherwise try to restrict what can be triggered.
+ - All Tekton event listeners run with the same ServiceAccount which
+   has wide-ranging permissions in the cluster. It's probably possible
+   to narrow the permissions down to the particular namespace of the
+   app, and otherwise try to restrict what can be triggered.
+ - The trigger templates accept a service account, which is used to
+   get image push secret(s). I have just used the same service account
+   as for the event listener.
 
 ## Flux
 
