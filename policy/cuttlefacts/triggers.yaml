@@ -40,7 +40,7 @@ spec:
           eventTypes:
           - push
       - cel:
-          filter: "body.ref == 'refs/heads/build-pipe'"
+          filter: "body.ref == 'refs/heads/master'"
       bindings:
       - name: github-push-binding
       - name: cuttlefacts-push-binding
