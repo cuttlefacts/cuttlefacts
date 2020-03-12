@@ -1,0 +1,77 @@
+---
+# This is bindings from a GitHub push webhook payload to a field
+# required for the template below. This is adapted from an example
+# given at
+# https://github.com/tektoncd/triggers/blob/master/docs/triggerbindings.md
+#
+# Note that we don't in general want to take the git URL from the
+# webhook payload -- what if it was injected somehow? So we just take
+# the revision (suspect, but much less so), and let the URL be
+# supplied elsewhere.
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: github-push-binding
+  namespace: policy
+spec:
+  params:
+  - name: gitref
+    value: $(body.ref)
+  - name: gitrevision
+    value: $(body.head_commit.id)
+---
+# This is a template for driving the image build task at a particular
+# revision. This is adapted from an example given at
+# https://github.com/tektoncd/triggers/blob/master/docs/triggertemplates.md
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: build-image-template
+  namespace: policy
+spec:
+  params:
+  - name: gitrevision
+    description: The git revision
+    default: master
+  - name: gitrepositoryurl
+    description: The git repository url
+  - name: dockerfile
+    description: The path to the Dockerfile
+  - name: path
+    description: The path to the Docker context
+  - name: imagename
+    description: The image being built
+  - name: serviceaccount
+    description: the service account to run under
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      generateName: build-image-
+    spec:
+      serviceAccountName: $(params.serviceaccount) # <-- must have the docker push secret
+      taskRef:
+        name: build-image
+        kind: ClusterTask
+      params:
+      - name: DOCKERFILE
+        value: $(params.dockerfile)
+      - name: CONTEXT
+        value: $(params.path)
+      resources:
+        inputs:
+        - name: source
+          resourceSpec:
+            type: git
+            params:
+            - name: revision
+              value: $(params.gitrevision)
+            - name: url
+              value: $(params.gitrepositoryurl)
+        outputs:
+        - name: image
+          resourceSpec:
+            type: image
+            params:
+            - name: url
+              value: $(params.imagename)
