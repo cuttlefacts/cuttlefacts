@@ -101,6 +101,10 @@ spec:
         # Tell flux it has readonly access to the repo (default `false`)
         - --git-readonly
 
+        # We don't need the secret to hold a key, but we do want to
+        # poke the HWM into an annotation
+        - --k8s-secret-name=cuttlefacts-git
+
         # Serve /metrics endpoint at different port;
         # make sure to set prometheus' annotation to scrape the port value.
         - --listen-metrics=:3031
@@ -110,6 +114,6 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: flux-git-deploy
+  name: cuttlefacts-git
   namespace: policy
 type: Opaque
