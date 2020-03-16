@@ -12,7 +12,7 @@ metadata:
 spec:
   params:
   - name: gitrepositoryurl
-    value: https://github.com/squaremo/cuttlefacts
+    value: https://github.com/squaremo/cuttlefacts-app
   - name: dockerfile
     value: src/Dockerfile
   - name: path
