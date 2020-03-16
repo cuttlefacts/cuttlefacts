@@ -25,8 +25,9 @@ distinct layer of Kubernetes configuration:
    delivering apps (in this case, Tekton);
  - `policy/`, which sets up the app delivery pipelines for each
    application;
- - and `app/`, which is the deployments and so on running each
-   application.
+ - and `app/`, which represents the applications, but is empty since
+   they will have their own git repositories (that is:
+   [squaremo/cuttlefacts-app][app-repo])
 
 Each layer instantiates the one above it. For example, the `policy`
 layer includes a deployment for a Flux daemon that will apply the
@@ -46,5 +47,4 @@ repository that is given in `substructure/flux-deployment.yaml`.
 Each of the layers has a README.md describing its purpose and what can
 be tinkered with.
 
-Lastly, the directory `src/` has the source for the app itself. This
-is compiled to a container image so it can be run in the cluster.
+[app-repo]: https://github.com/squaremo/cuttlefacts-app
